@@ -87,8 +87,8 @@ export default function ValidacionDetail() {
       .catch(() => setProcesando(false))
   }
 
-  if (loading) return <div className="p-8 text-slate-500">Cargando...</div>
-  if (error || !validacion) return <div className="p-8 text-red-600">{error || "No encontrado"}</div>
+  if (loading) return <div className="ci-page text-slate-500">Cargando...</div>
+  if (error || !validacion) return <div className="ci-page text-red-600">{error || "No encontrado"}</div>
 
   const estado = validacion.estado
   const faseAcademico = ["pendiente_academico", "rechazado_academico", "en_correccion_academico"].includes(estado)
@@ -96,15 +96,15 @@ export default function ValidacionDetail() {
   const completo = estado === "validado_completo"
 
   return (
-    <div className="p-8">
+    <section className="ci-page">
       <Link to="/" className="text-sm text-slate-500 hover:text-navy">
         ← Volver a la lista
       </Link>
 
-      <div className="flex items-center justify-between mt-2 mb-6">
+      <div className="ci-page-header mt-2">
         <div>
-          <h1 className="text-2xl font-bold text-navy mb-1">Revisar participante</h1>
-          <p className="text-slate-500">Validación #{validacion.id} · Participante #{validacion.idParticipante}</p>
+          <h1>Revisar participante</h1>
+          <p>Validación #{validacion.id} · Participante #{validacion.idParticipante}</p>
         </div>
         <EstadoBadge estado={estado} />
       </div>
@@ -282,6 +282,6 @@ export default function ValidacionDetail() {
           Volver a la lista
         </Button>
       </div>
-    </div>
+    </section>
   )
 }

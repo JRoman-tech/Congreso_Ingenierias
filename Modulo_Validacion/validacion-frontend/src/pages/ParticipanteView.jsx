@@ -147,22 +147,30 @@ export default function ParticipanteView() {
     })
   }
 
-  if (loading) return <div className="p-8 text-slate-500">Cargando tu información...</div>
+  if (loading) return <div className="ci-page text-slate-500">Cargando tu información...</div>
 
   if (!validacion) return (
-    <div className="p-8">
-      <h1 className="text-2xl font-bold text-navy mb-2">Mi validación</h1>
-      <p className="text-slate-500">No tienes ninguna validación registrada aún.</p>
-    </div>
+    <section className="ci-page">
+      <div className="ci-page-header">
+        <div>
+          <h1>Mi validación</h1>
+          <p>No tienes ninguna validación registrada aún.</p>
+        </div>
+      </div>
+    </section>
   )
 
   const puedeEditarAcademico = ["pendiente_academico", "rechazado_academico", "en_correccion_academico"].includes(validacion.estado)
   const puedeSubirPago = validacion.estado === "aprobado_academico" || validacion.estado === "pendiente_pago" || validacion.estado === "pago_no_recibido"
 
   return (
-    <div className="p-8 max-w-3xl">
-      <h1 className="text-2xl font-bold text-navy mb-1">Mi validación</h1>
-      <p className="text-slate-500 mb-4">Hola, {usuario.nombre}</p>
+    <section className="ci-page max-w-3xl">
+      <div className="ci-page-header">
+        <div>
+          <h1>Mi validación</h1>
+          <p>Hola, {usuario.nombre}</p>
+        </div>
+      </div>
 
       <div className="flex items-center gap-3 mb-6">
         <span className="text-sm text-slate-500">Estado actual:</span>
@@ -320,6 +328,6 @@ export default function ParticipanteView() {
           </CardContent>
         </Card>
       )}
-    </div>
+    </section>
   )
 }
