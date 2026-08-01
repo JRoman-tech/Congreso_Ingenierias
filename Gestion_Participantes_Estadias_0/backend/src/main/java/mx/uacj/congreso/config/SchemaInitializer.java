@@ -16,10 +16,19 @@ public class SchemaInitializer implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) {
-        jdbc.execute("""
-                ALTER TABLE usuarios
-                ADD COLUMN IF NOT EXISTS password_hash VARCHAR(100) NULL AFTER rol
-                """);
+        Integer passwordColumnCount = jdbc.queryForObject("""
+                SELECT COUNT(*)
+                FROM information_schema.columns
+                WHERE table_schema = DATABASE()
+                  AND table_name = 'usuarios'
+                  AND column_name = 'password_hash'
+                """, Integer.class);
+        if (passwordColumnCount != null && passwordColumnCount == 0) {
+            jdbc.execute("""
+                    ALTER TABLE usuarios
+                    ADD COLUMN password_hash VARCHAR(100) NULL AFTER rol
+                    """);
+        }
         jdbc.execute("""
                 CREATE TABLE IF NOT EXISTS requisitos_documentos (
                   participante_id CHAR(36) NOT NULL,

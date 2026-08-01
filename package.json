@@ -1,0 +1,18 @@
+{
+  "name": "congreso-ingenierias",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "setup": "npm ci --prefix Gestion_Participantes_Estadias_0/frontend && npm ci --prefix Modulo_Validacion/validacion-frontend",
+    "dev": "concurrently -k -n GESTION-API,VALIDACION-API,GESTION-WEB,VALIDACION-WEB -c blue,magenta,green,yellow \"npm:dev:gestion-api\" \"npm:dev:validacion-api\" \"npm:dev:gestion-web\" \"npm:dev:validacion-web\"",
+    "dev:gestion-api": "Gestion_Participantes_Estadias_0\\backend\\mvnw.cmd -f Gestion_Participantes_Estadias_0\\backend\\pom.xml spring-boot:run",
+    "dev:validacion-api": "Modulo_Validacion\\validacion-backend\\mvnw.cmd -f Modulo_Validacion\\validacion-backend\\pom.xml spring-boot:run",
+    "dev:gestion-web": "npm run dev --prefix Gestion_Participantes_Estadias_0/frontend",
+    "dev:validacion-web": "npm run dev --prefix Modulo_Validacion/validacion-frontend",
+    "build": "npm run build --prefix Gestion_Participantes_Estadias_0/frontend && npm run build --prefix Modulo_Validacion/validacion-frontend",
+    "test:backends": "Gestion_Participantes_Estadias_0\\backend\\mvnw.cmd -q -f Gestion_Participantes_Estadias_0\\backend\\pom.xml test && Modulo_Validacion\\validacion-backend\\mvnw.cmd -q -f Modulo_Validacion\\validacion-backend\\pom.xml test"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}

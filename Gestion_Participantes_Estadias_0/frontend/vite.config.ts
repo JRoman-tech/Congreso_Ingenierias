@@ -3,5 +3,15 @@ import react from '@vitejs/plugin-react'
 
 export default defineConfig({
   plugins: [react()],
+  server: {
+    port: 5173,
+    strictPort: true,
+    proxy: {
+      '/modulo-validacion': {
+        target: 'http://localhost:5174',
+        changeOrigin: true,
+        ws: true,
+      },
+    },
+  },
 })
-

@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
-import { Separator } from "@/components/ui/separator"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import api from "@/lib/api"
@@ -86,7 +85,7 @@ export default function ParticipanteView() {
         setLoading(false)
       })
       .catch(() => setLoading(false))
-  }, [])
+  }, [usuario.id])
 
   const handleEnviarAcademico = () => {
   const conteo = resumen.trim() === "" ? 0 : resumen.trim().split(/\s+/).length
@@ -140,7 +139,7 @@ export default function ParticipanteView() {
       setSubiendoArchivo(false)
       setArchivo(null)
       // Actualizar estado a pendiente_pago
-      return api.put(`/validacion/${validacion.id}/en-correccion`)
+      return api.put(`/validacion/${validacion.id}/pendiente-pago`)
     })
     .catch(() => {
       setMensajeArchivo("Error al subir el archivo, intenta de nuevo")

@@ -1,21 +1,21 @@
-import { Link, useLocation, useNavigate } from "react-router-dom"
-import { ShieldCheck, Bell, LogOut, ClipboardList } from "lucide-react"
+import { Link, useLocation } from "react-router-dom"
+import { ShieldCheck, Bell, LogOut, ClipboardList, LayoutDashboard } from "lucide-react"
 
 export default function Layout({ children }) {
   const location = useLocation()
-  const navigate = useNavigate()
   const usuario = JSON.parse(localStorage.getItem("usuario") || "{}")
 
   const handleLogout = () => {
     localStorage.removeItem("usuario")
-    navigate("/login")
+    localStorage.removeItem("usuarioSesionId")
+    window.location.assign("/")
   }
 
   const iniciales = usuario.nombre
     ? usuario.nombre.split(" ").map(n => n[0]).slice(0, 2).join("")
     : "??"
 
-  const navItems = usuario.rol === "admin"
+  const navItems = usuario.rol === "admin" || usuario.rol === "administrador"
     ? [{ label: "Validaciones", icon: ShieldCheck, path: "/" }]
     : [{ label: "Mi validación", icon: ClipboardList, path: "/participante" }]
 
@@ -34,6 +34,13 @@ export default function Layout({ children }) {
         </div>
 
         <nav className="flex-1 px-2 py-3 space-y-0.5">
+          <a
+            href="/dashboard"
+            className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-white/60 hover:bg-white/10 hover:text-white"
+          >
+            <LayoutDashboard size={17} />
+            Gestión de participantes
+          </a>
           {navItems.map(({ label, icon: Icon, path }) => {
             const active = location.pathname === path
             return (

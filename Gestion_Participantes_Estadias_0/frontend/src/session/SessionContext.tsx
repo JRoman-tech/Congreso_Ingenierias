@@ -8,10 +8,21 @@ import {
   useState,
   type ReactNode,
 } from 'react'
-import { authApi, sessionApi } from '../api'
+import { authApi, sessionApi, validationIntegrationApi } from '../api'
 import type { SessionUser } from '../types'
 
 const STORAGE_KEY = 'usuarioSesionId'
+const VALIDATION_USER_KEY = 'usuario'
+
+async function syncValidationSession(sessionUser: SessionUser) {
+  try {
+    const { data } = await validationIntegrationApi.sincronizarSesion(sessionUser.id)
+    window.localStorage.setItem(VALIDATION_USER_KEY, JSON.stringify(data))
+  } catch {
+    // El módulo principal sigue disponible aunque validación esté temporalmente apagado.
+    window.localStorage.removeItem(VALIDATION_USER_KEY)
+  }
+}
 
 interface SessionValue {
   user: SessionUser | null
@@ -39,6 +50,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       try {
         const { data } = await sessionApi.obtener(storedId)
         setUser(data)
+        void syncValidationSession(data as SessionUser)
       } catch {
         window.localStorage.removeItem(STORAGE_KEY)
         setUser(null)
@@ -53,6 +65,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     window.localStorage.setItem(STORAGE_KEY, sessionUser.id)
     setUser(sessionUser)
     setError('')
+    void syncValidationSession(sessionUser)
     return sessionUser
   }, [])
 
@@ -68,6 +81,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
 
   const logout = useCallback(() => {
     window.localStorage.removeItem(STORAGE_KEY)
+    window.localStorage.removeItem(VALIDATION_USER_KEY)
     setUser(null)
     setError('')
   }, [])

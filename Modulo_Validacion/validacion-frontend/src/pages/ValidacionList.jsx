@@ -76,11 +76,6 @@ const validacionesFiltradas = validaciones.filter(v => {
       v.correo?.toLowerCase().includes(busqueda.toLowerCase())
     return coincideEstado && coincideBusqueda
   })
-  const coincideBusqueda = busqueda === "" ||
-  v.id.toString().includes(busqueda) ||
-  v.nombre?.toLowerCase().includes(busqueda.toLowerCase()) ||
-  v.correo?.toLowerCase().includes(busqueda.toLowerCase())
-
   if (loading) return <div className="p-8 text-slate-500">Cargando participantes...</div>
   if (error) return <div className="p-8 text-red-600">{error}</div>
 

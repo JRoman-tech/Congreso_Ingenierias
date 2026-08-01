@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useParams, Link, useNavigate } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -49,7 +49,7 @@ export default function ValidacionDetail() {
   const [procesando, setProcesando] = useState(false)
   const [observaciones, setObservaciones] = useState("")
 
-  const cargarTodo = () => {
+  const cargarTodo = useCallback(() => {
     Promise.all([
       api.get(`/validacion/${id}`),
       api.get(`/validacion-pago/validacion/${id}`).catch(() => ({ data: null })),
@@ -67,11 +67,11 @@ export default function ValidacionDetail() {
         setError("No se pudo cargar la información")
         setLoading(false)
       })
-  }
+  }, [id])
 
   useEffect(() => {
     cargarTodo()
-  }, [id])
+  }, [cargarTodo])
 
   const cambiarEstado = (endpoint) => {
     setProcesando(true)

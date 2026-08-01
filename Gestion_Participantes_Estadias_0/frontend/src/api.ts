@@ -1,11 +1,22 @@
 import axios from 'axios'
 
 export const API_BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:3001'
+export const VALIDATION_API_BASE = import.meta.env.VITE_VALIDATION_API_URL ?? 'http://localhost:8081'
 
 const api = axios.create({
   baseURL: `${API_BASE}/api`,
   timeout: 10000,
 })
+
+const validationApiClient = axios.create({
+  baseURL: `${VALIDATION_API_BASE}/api`,
+  timeout: 10000,
+})
+
+export const validationIntegrationApi = {
+  sincronizarSesion: (sessionId: string) =>
+    validationApiClient.post(`/integracion/sesion/${sessionId}`),
+}
 
 export const dashboardApi = {
   stats: () => api.get('/dashboard/stats'),
