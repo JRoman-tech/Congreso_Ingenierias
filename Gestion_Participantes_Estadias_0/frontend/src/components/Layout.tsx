@@ -23,6 +23,7 @@ const adminNavigation = [
   { to: '/dashboard/documentos', label: 'Documentos', icon: FolderOpen },
   { to: '/dashboard/trabajos', label: 'Trabajos', icon: FileText },
   { to: '/dashboard/historial', label: 'Historial', icon: History },
+  { to: '/modulo-validacion/', label: 'Validación', icon: ShieldCheck, external: true },
 ]
 
 const participantNavigation = [
@@ -30,6 +31,7 @@ const participantNavigation = [
   { to: '/dashboard/academica', label: 'Mi información académica', icon: GraduationCap },
   { to: '/dashboard/documentos', label: 'Mis documentos', icon: FolderOpen },
   { to: '/dashboard/trabajos', label: 'Mis trabajos', icon: FileText },
+  { to: '/modulo-validacion/participante', label: 'Mi validación', icon: ShieldCheck, external: true },
 ]
 
 export default function Layout({ children }: { children: ReactNode }) {
@@ -60,13 +62,17 @@ export default function Layout({ children }: { children: ReactNode }) {
         </div>
 
         <nav>
-          {navigation.map(({ to, label, icon: Icon }) => {
+          {navigation.map(({ to, label, icon: Icon, external }) => {
             const active = to === '/dashboard' ? path === to : path.startsWith(to)
             return (
               <a
                 key={to}
                 href={to}
                 onClick={event => {
+                  if (external) {
+                    setOpen(false)
+                    return
+                  }
                   event.preventDefault()
                   navigate(to)
                   setOpen(false)

@@ -115,6 +115,19 @@ public class ValidacionController {
         return ResponseEntity.ok(v);
     }
 
+    @PutMapping("/{id}/pendiente-pago")
+    public ResponseEntity<Validacion> pendientePago(@PathVariable Long id) {
+        Optional<Validacion> optional = validacionRepository.findById(id);
+        if (optional.isEmpty()) return ResponseEntity.notFound().build();
+        Validacion v = optional.get();
+        String anterior = v.getEstado().name();
+        v.setEstado(Validacion.EstadoValidacion.pendiente_pago);
+        v.setActualizadoEn(LocalDateTime.now().toString());
+        validacionRepository.save(v);
+        guardarHistorial(id, anterior, "pendiente_pago", "Comprobante enviado para revisión");
+        return ResponseEntity.ok(v);
+    }
+
     @PutMapping("/{id}/pago-no-recibido")
     public ResponseEntity<Validacion> pagoNoRecibido(@PathVariable Long id) {
         Optional<Validacion> optional = validacionRepository.findById(id);

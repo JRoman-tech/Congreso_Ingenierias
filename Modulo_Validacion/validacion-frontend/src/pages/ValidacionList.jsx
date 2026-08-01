@@ -68,7 +68,7 @@ export default function ValidacionList() {
         setLoading(false)
       })
   }, [])
-const validacionesFiltradas = validaciones.filter(v => {
+  const validacionesFiltradas = validaciones.filter(v => {
     const coincideEstado = filtroEstado === "todos" || v.estado === filtroEstado
     const coincideBusqueda = busqueda === "" ||
       v.id.toString().includes(busqueda) ||
@@ -76,36 +76,35 @@ const validacionesFiltradas = validaciones.filter(v => {
       v.correo?.toLowerCase().includes(busqueda.toLowerCase())
     return coincideEstado && coincideBusqueda
   })
-  const coincideBusqueda = busqueda === "" ||
-  v.id.toString().includes(busqueda) ||
-  v.nombre?.toLowerCase().includes(busqueda.toLowerCase()) ||
-  v.correo?.toLowerCase().includes(busqueda.toLowerCase())
-
-  if (loading) return <div className="p-8 text-slate-500">Cargando participantes...</div>
-  if (error) return <div className="p-8 text-red-600">{error}</div>
+  if (loading) return <div className="ci-page text-slate-500">Cargando participantes...</div>
+  if (error) return <div className="ci-page text-red-600">{error}</div>
 
   return (
-    <div className="p-8">
-      <h1 className="text-2xl font-bold text-navy mb-1">Validación</h1>
-      <p className="text-slate-500 mb-6">Lista de participantes pendientes de revisión</p>
+    <section className="ci-page">
+      <div className="ci-page-header">
+        <div>
+          <h1>Validación</h1>
+          <p>Lista de participantes pendientes de revisión</p>
+        </div>
+      </div>
 
       {/* Stats rápidas */}
-      <div className="grid grid-cols-4 gap-4 mb-6">
+      <div className="ci-stats-grid">
         {[
           { label: "Total", valor: validaciones.length, color: "text-navy" },
           { label: "Pendientes", valor: validaciones.filter(v => v.estado === "pendiente_academico" || v.estado === "pendiente_pago").length, color: "text-yellow-700" },
           { label: "Aprobados", valor: validaciones.filter(v => v.estado === "validado_completo").length, color: "text-green-700" },
           { label: "Rechazados", valor: validaciones.filter(v => v.estado === "rechazado_academico" || v.estado === "pago_no_recibido").length, color: "text-red-700" },
         ].map(s => (
-          <div key={s.label} className="bg-white rounded-lg border border-slate-200 p-4">
-            <div className="text-sm text-slate-400">{s.label}</div>
-            <div className={`text-2xl font-bold mt-1 ${s.color}`}>{s.valor}</div>
-          </div>
+          <article key={s.label} className="ci-stat-card">
+            <span>{s.label}</span>
+            <strong className={s.color}>{s.valor}</strong>
+          </article>
         ))}
       </div>
 
       {/* Filtros */}
-      <div className="flex gap-3 mb-4">
+      <div className="ci-toolbar">
         <Input
           placeholder="Buscar por ID o ID participante..."
           className="max-w-xs"
@@ -138,7 +137,7 @@ const validacionesFiltradas = validaciones.filter(v => {
       </div>
 
       {/* Tabla */}
-      <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
+      <div className="ci-table-card">
         <Table>
           <TableHeader>
             <TableRow>
@@ -170,7 +169,7 @@ const validacionesFiltradas = validaciones.filter(v => {
                   <TableCell className="text-slate-500">{v.actualizadoEn?.substring(0, 16).replace("T", " ")}</TableCell>
                   <TableCell>
                     <Link to={`/validacion/${v.id}`}>
-                      <Button size="sm" className="bg-gold text-navy font-semibold hover:bg-gold/90">
+                      <Button size="sm">
                         Revisar
                       </Button>
                     </Link>
@@ -184,6 +183,6 @@ const validacionesFiltradas = validaciones.filter(v => {
           Mostrando {validacionesFiltradas.length} de {validaciones.length} resultados
         </div>
       </div>
-    </div>
+    </section>
   )
 }
