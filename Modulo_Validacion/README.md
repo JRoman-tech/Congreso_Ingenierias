@@ -4,7 +4,7 @@ Módulo de validación y control asignado al Alumno 2.
 
 ## Tecnologías
 
-* **Backend:** Java 21, Spring Boot 4.1 y API REST
+* **Backend:** Java 17, Spring Boot 4.1 y API REST
 * **Frontend:** React 18, Vite y Tailwind CSS
 * **Base de datos:** MySQL
 

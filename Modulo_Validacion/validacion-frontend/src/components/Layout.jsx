@@ -1,85 +1,109 @@
-import { Link, useLocation, useNavigate } from "react-router-dom"
-import { ShieldCheck, Bell, LogOut, ClipboardList } from "lucide-react"
+import { useState } from "react"
+import { Link, useLocation } from "react-router-dom"
+import {
+  ClipboardList,
+  FileText,
+  FolderOpen,
+  GraduationCap,
+  History,
+  LayoutDashboard,
+  LogOut,
+  Menu,
+  ShieldCheck,
+  UserCircle,
+  Users,
+  X,
+} from "lucide-react"
+
+const adminNavigation = [
+  { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
+  { label: "Participantes", icon: Users, href: "/dashboard/participantes" },
+  { label: "Información académica", icon: GraduationCap, href: "/dashboard/academica" },
+  { label: "Documentos", icon: FolderOpen, href: "/dashboard/documentos" },
+  { label: "Trabajos", icon: FileText, href: "/dashboard/trabajos" },
+  { label: "Historial", icon: History, href: "/dashboard/historial" },
+  { label: "Validación", icon: ShieldCheck, to: "/" },
+]
+
+const participantNavigation = [
+  { label: "Mi panel", icon: LayoutDashboard, href: "/dashboard" },
+  { label: "Mi información académica", icon: GraduationCap, href: "/dashboard/academica" },
+  { label: "Mis documentos", icon: FolderOpen, href: "/dashboard/documentos" },
+  { label: "Mis trabajos", icon: FileText, href: "/dashboard/trabajos" },
+  { label: "Mi validación", icon: ClipboardList, to: "/participante" },
+]
 
 export default function Layout({ children }) {
   const location = useLocation()
-  const navigate = useNavigate()
   const usuario = JSON.parse(localStorage.getItem("usuario") || "{}")
+  const [open, setOpen] = useState(false)
+  const isAdmin = usuario.rol === "admin" || usuario.rol === "administrador"
+  const navigation = isAdmin ? adminNavigation : participantNavigation
 
   const handleLogout = () => {
     localStorage.removeItem("usuario")
-    navigate("/login")
+    localStorage.removeItem("usuarioSesionId")
+    window.location.assign("/")
   }
 
-  const iniciales = usuario.nombre
-    ? usuario.nombre.split(" ").map(n => n[0]).slice(0, 2).join("")
-    : "??"
-
-  const navItems = usuario.rol === "admin"
-    ? [{ label: "Validaciones", icon: ShieldCheck, path: "/" }]
-    : [{ label: "Mi validación", icon: ClipboardList, path: "/participante" }]
-
   return (
-    <div className="flex min-h-screen">
-      {/* Sidebar */}
-      <aside className="w-60 bg-navy flex flex-col flex-shrink-0">
-        <div className="px-4 py-4 border-b border-white/10">
-          <p className="text-gold text-[10px] font-bold tracking-wide leading-tight">
-            CONGRESO INTERNACIONAL
-          </p>
-          <p className="text-white text-base font-extrabold leading-tight">
-            FRONTERAS <span className="text-gold">2</span>
-          </p>
-          <p className="text-white/40 text-[9px] mt-0.5">DE LAS INGENIERÍAS 2026</p>
-        </div>
+    <div className="ci-shell">
+      <button
+        className="ci-menu-button"
+        type="button"
+        aria-label={open ? "Cerrar menú" : "Abrir menú"}
+        onClick={() => setOpen(value => !value)}
+      >
+        {open ? <X /> : <Menu />}
+      </button>
 
-        <nav className="flex-1 px-2 py-3 space-y-0.5">
-          {navItems.map(({ label, icon: Icon, path }) => {
-            const active = location.pathname === path
-            return (
-              <Link
-                key={label}
-                to={path}
-                className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm ${
-                  active
-                    ? "bg-gold text-navy font-semibold"
-                    : "text-white/60 hover:bg-white/10 hover:text-white"
-                }`}
-              >
-                <Icon size={17} />
-                {label}
+      <aside className={`ci-sidebar ${open ? "open" : ""}`}>
+        <a className="ci-brand" href="/dashboard" aria-label="Ir al dashboard">
+          <span className="ci-brand-number">2</span>
+          <span>
+            <strong>FRONTERAS</strong>
+            <small>DE LAS INGENIERÍAS 2026</small>
+          </span>
+        </a>
+
+        <nav>
+          {navigation.map(({ label, icon: Icon, href, to }) => {
+            const active = Boolean(to) && (
+              to === "/" ? location.pathname === "/" || location.pathname.startsWith("/validacion/")
+                : location.pathname.startsWith(to)
+            )
+            const className = active ? "ci-nav-link active" : "ci-nav-link"
+            const content = <><Icon size={19} /><span>{label}</span></>
+
+            return href ? (
+              <a key={label} className={className} href={href} onClick={() => setOpen(false)}>
+                {content}
+              </a>
+            ) : (
+              <Link key={label} className={className} to={to} onClick={() => setOpen(false)}>
+                {content}
               </Link>
             )
           })}
         </nav>
 
-        <div className="px-4 py-3 border-t border-white/10">
-          <p className="text-gold text-[9px] font-semibold">UNIVERSIDAD AUTÓNOMA</p>
-          <p className="text-white/50 text-[9px]">DE CIUDAD JUÁREZ</p>
+        <div className="ci-session-card">
+          <div className="ci-session-heading">
+            {isAdmin ? <ShieldCheck size={19} /> : <UserCircle size={19} />}
+            <span>Sesión iniciada</span>
+          </div>
+          <strong>{usuario.nombre || "Usuario"}</strong>
+          <small>{usuario.correo}</small>
+          <span className="ci-session-role">{isAdmin ? "Administrador" : "Participante"}</span>
+          <button className="ci-logout-button" type="button" onClick={handleLogout}>
+            <LogOut size={15} /> Cerrar sesión
+          </button>
         </div>
+
+        <div className="ci-institution">Universidad Autónoma de Ciudad Juárez</div>
       </aside>
 
-      {/* Contenido principal */}
-      <div className="flex-1 flex flex-col bg-slate-50">
-        <header className="bg-white border-b border-slate-200 flex items-center justify-end px-6 gap-4 py-3">
-          <Bell size={18} className="text-slate-400" />
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-full bg-navy text-gold text-[11px] font-bold flex items-center justify-center">
-              {iniciales}
-            </div>
-            <span className="text-sm text-navy font-medium">{usuario.nombre || "Usuario"}</span>
-          </div>
-          <button
-            onClick={handleLogout}
-            className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-red-500 transition-colors"
-          >
-            <LogOut size={14} />
-            Salir
-          </button>
-        </header>
-
-        <main className="flex-1">{children}</main>
-      </div>
+      <main className="ci-content">{children}</main>
     </div>
   )
 }
