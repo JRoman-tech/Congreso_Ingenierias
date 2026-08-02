@@ -1,6 +1,7 @@
 import {
   FileUp,
   GraduationCap,
+  KeyRound,
   Pencil,
   Plus,
   Search,
@@ -10,6 +11,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { participantesApi } from '../api'
 import { useRouter } from '../router'
 import type { Participante } from '../types'
+import PasswordDialog from '../components/PasswordDialog'
 
 export default function Participantes() {
   const { navigate } = useRouter()
@@ -17,6 +19,7 @@ export default function Participantes() {
   const [search, setSearch] = useState('')
   const [categoria, setCategoria] = useState('')
   const [error, setError] = useState('')
+  const [passwordTarget, setPasswordTarget] = useState<Participante | null>(null)
 
   const load = useCallback(async () => {
     try {
@@ -125,6 +128,13 @@ export default function Participantes() {
                     >
                       <FileUp size={15} />
                     </button>
+                    <button
+                      className="icon-button"
+                      title="Restablecer contraseña"
+                      onClick={() => setPasswordTarget(row)}
+                    >
+                      <KeyRound size={15} />
+                    </button>
                     <button className="icon-button danger" title="Eliminar" onClick={() => remove(row.id)}>
                       <Trash2 size={15} />
                     </button>
@@ -135,6 +145,14 @@ export default function Participantes() {
           </tbody>
         </table>
       </div>
+      <PasswordDialog
+        open={passwordTarget !== null}
+        onClose={() => setPasswordTarget(null)}
+        target={passwordTarget ? {
+          participanteId: passwordTarget.id,
+          nombre: `${passwordTarget.nombre} ${passwordTarget.apellido_paterno}`,
+        } : undefined}
+      />
     </section>
   )
 }

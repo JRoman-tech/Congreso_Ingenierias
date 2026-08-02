@@ -30,6 +30,18 @@ export const authApi = {
   login: (correo: string, password: string) =>
     api.post('/auth/login', { correo, password }),
   registrar: (data: object) => api.post('/auth/registro', data),
+  cambiarPassword: (usuarioId: string, actual: string, nueva: string) =>
+    api.put('/auth/password', {
+      usuario_id: usuarioId,
+      password_actual: actual,
+      password_nuevo: nueva,
+    }),
+  restablecerPassword: (administradorId: string, participanteId: string, nueva: string) =>
+    api.put('/auth/password/admin', {
+      administrador_id: administradorId,
+      participante_id: participanteId,
+      password_nuevo: nueva,
+    }),
 }
 
 export const paymentConfigApi = {

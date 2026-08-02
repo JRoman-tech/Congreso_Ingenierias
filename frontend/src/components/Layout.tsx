@@ -3,6 +3,7 @@ import {
   FolderOpen,
   GraduationCap,
   History,
+  KeyRound,
   LayoutDashboard,
   LogOut,
   Menu,
@@ -15,6 +16,7 @@ import { useState, type ReactNode } from 'react'
 import { useRouter } from '../router'
 import { useSession } from '../session/SessionContext'
 import NotificationCenter from './NotificationCenter'
+import PasswordDialog from './PasswordDialog'
 
 const adminNavigation = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -37,6 +39,7 @@ export default function Layout({ children }: { children: ReactNode }) {
   const { path, navigate } = useRouter()
   const { user, logout } = useSession()
   const [open, setOpen] = useState(false)
+  const [passwordOpen, setPasswordOpen] = useState(false)
   const navigation = user?.rol === 'administrador' ? adminNavigation : participantNavigation
 
   function closeSession() {
@@ -87,6 +90,9 @@ export default function Layout({ children }: { children: ReactNode }) {
           <span className="session-role">
             {user?.rol === 'administrador' ? 'Administrador' : 'Participante'}
           </span>
+          <button className="session-action-button" type="button" onClick={() => setPasswordOpen(true)}>
+            <KeyRound size={15} /> Cambiar contraseña
+          </button>
           <button className="logout-button" type="button" onClick={closeSession}>
             <LogOut size={15} /> Cerrar sesión
           </button>
@@ -99,6 +105,7 @@ export default function Layout({ children }: { children: ReactNode }) {
         <NotificationCenter />
         {children}
       </main>
+      <PasswordDialog open={passwordOpen} onClose={() => setPasswordOpen(false)} />
     </div>
   )
 }
