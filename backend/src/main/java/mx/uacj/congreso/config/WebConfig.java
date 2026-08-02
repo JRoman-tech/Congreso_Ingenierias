@@ -13,15 +13,19 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 public class WebConfig implements WebMvcConfigurer {
 
     private final Path uploadDirectory;
+    private final String[] allowedOrigins;
 
-    public WebConfig(@Value("${app.upload-dir}") String uploadDirectory) {
+    public WebConfig(
+            @Value("${app.upload-dir}") String uploadDirectory,
+            @Value("${app.allowed-origins}") String allowedOrigins) {
         this.uploadDirectory = Paths.get(uploadDirectory).toAbsolutePath().normalize();
+        this.allowedOrigins = allowedOrigins.split("\\s*,\\s*");
     }
 
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/api/**")
-                .allowedOrigins("http://localhost:5173", "http://127.0.0.1:5173")
+                .allowedOrigins(allowedOrigins)
                 .allowedMethods("GET", "POST", "PUT", "DELETE")
                 .allowedHeaders("*");
     }
@@ -32,4 +36,3 @@ public class WebConfig implements WebMvcConfigurer {
                 .addResourceLocations(uploadDirectory.toUri().toString());
     }
 }
-
