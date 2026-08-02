@@ -32,6 +32,12 @@ export const authApi = {
   registrar: (data: object) => api.post('/auth/registro', data),
 }
 
+export const paymentConfigApi = {
+  obtener: () => api.get('/configuracion/pagos'),
+  actualizar: (modalidad: 'individual' | 'agrupado', usuarioId: string) =>
+    api.put('/configuracion/pagos', { modalidad, usuario_id: usuarioId }),
+}
+
 export const participantesApi = {
   listar: (params?: object) => api.get('/participantes', { params }),
   obtener: (id: string) => api.get(`/participantes/${id}`),
@@ -78,26 +84,11 @@ export const participantesApi = {
 export const trabajosApi = {
   listar: (params?: object) => api.get('/trabajos', { params }),
   obtener: (id: string) => api.get(`/trabajos/${id}`),
-  crear: (data: object) => api.post('/trabajos', data),
+  crear: (data: FormData) => api.post('/trabajos', data),
   actualizar: (id: string, data: object) => api.put(`/trabajos/${id}`, data),
+  reemplazarArchivo: (id: string, data: FormData) =>
+    api.put(`/trabajos/${id}/archivo`, data),
   actualizarEstado: (id: string, estado: string, usuarioId?: string) =>
     api.put(`/trabajos/${id}/estado`, { estado, usuario_id: usuarioId }),
   eliminar: (id: string) => api.delete(`/trabajos/${id}`),
-}
-
-export const validacionesApi = {
-  listar: () => api.get('/validaciones'),
-  obtener: (id: number) => api.get(`/validaciones/${id}`),
-  obtenerParticipante: (participanteId: string) =>
-    api.get(`/validaciones/participante/${participanteId}`),
-  actualizarEstado: (id: number, estado: string, comentario: string, usuarioId?: string) =>
-    api.put(`/validaciones/${id}/estado`, {
-      estado,
-      comentario,
-      usuario_id: usuarioId,
-    }),
-  guardarAcademica: (participanteId: string, data: object) =>
-    api.put(`/validaciones/participante/${participanteId}/academica`, data),
-  subirComprobante: (participanteId: string, data: FormData) =>
-    api.post(`/validaciones/participante/${participanteId}/comprobante`, data),
 }

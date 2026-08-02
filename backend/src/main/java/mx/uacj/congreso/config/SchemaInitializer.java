@@ -29,6 +29,12 @@ public class SchemaInitializer implements ApplicationRunner {
                     ADD COLUMN password_hash VARCHAR(100) NULL AFTER rol
                     """);
         }
+        agregarColumnaTrabajoSiFalta(
+                "nombre_archivo", "VARCHAR(255) NULL AFTER estado");
+        agregarColumnaTrabajoSiFalta(
+                "ruta_archivo", "VARCHAR(500) NULL AFTER nombre_archivo");
+        agregarColumnaTrabajoSiFalta(
+                "tamano_bytes", "INT UNSIGNED NULL AFTER ruta_archivo");
         jdbc.execute("""
                 CREATE TABLE IF NOT EXISTS requisitos_documentos (
                   participante_id CHAR(36) NOT NULL,
@@ -78,6 +84,19 @@ public class SchemaInitializer implements ApplicationRunner {
                     FOREIGN KEY (participante_id) REFERENCES participantes (id)
                     ON DELETE CASCADE
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+                """);
+        jdbc.execute("""
+                CREATE TABLE IF NOT EXISTS configuracion_pagos (
+                  id TINYINT UNSIGNED NOT NULL,
+                  modalidad ENUM('individual','agrupado') NOT NULL DEFAULT 'individual',
+                  fecha_actualizacion DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+                    ON UPDATE CURRENT_TIMESTAMP,
+                  PRIMARY KEY (id)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+                """);
+        jdbc.update("""
+                INSERT IGNORE INTO configuracion_pagos (id, modalidad)
+                VALUES (1, 'individual')
                 """);
         jdbc.execute("""
                 CREATE TABLE IF NOT EXISTS comprobante_trabajos (
@@ -239,5 +258,18 @@ public class SchemaInitializer implements ApplicationRunner {
                     AND a.entidad_id = d.tipo_documento
                 )
                 """);
+    }
+
+    private void agregarColumnaTrabajoSiFalta(String columna, String definicion) {
+        Integer count = jdbc.queryForObject("""
+                SELECT COUNT(*)
+                FROM information_schema.columns
+                WHERE table_schema = DATABASE()
+                  AND table_name = 'trabajos'
+                  AND column_name = ?
+                """, Integer.class, columna);
+        if (count != null && count == 0) {
+            jdbc.execute("ALTER TABLE trabajos ADD COLUMN " + columna + " " + definicion);
+        }
     }
 }

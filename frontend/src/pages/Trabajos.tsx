@@ -1,20 +1,14 @@
-import { Eye, Pencil, Plus, Search, Trash2 } from 'lucide-react'
+import { Download, Eye, FileText, Pencil, Plus, Search, Trash2 } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
-import { participantesApi, trabajosApi } from '../api'
+import { API_BASE, trabajosApi } from '../api'
 import { useRouter } from '../router'
-import { useSession } from '../session/SessionContext'
-import type { Documento, Pago, Trabajo } from '../types'
+import type { Trabajo } from '../types'
+import { etiquetaEstadoTrabajo } from './trabajoHelpers'
 
-const REVIEW_OPTIONS = [
-  { value: 'pendiente', label: 'Pendiente' },
-  { value: 'en_revision', label: 'En revisión' },
-  { value: 'validado', label: 'Aceptado' },
-  { value: 'rechazado', label: 'Rechazado' },
-] as const
+const TEMPLATE_URL = '/plantillas/plantilla-trabajo-CIFIN.docx'
 
 export default function Trabajos({ participantId }: { participantId?: string }) {
   const { navigate } = useRouter()
-  const { user } = useSession()
   const [rows, setRows] = useState<Trabajo[]>([])
   const [search, setSearch] = useState('')
   const [modalidad, setModalidad] = useState('')
@@ -43,52 +37,12 @@ export default function Trabajos({ participantId }: { participantId?: string }) 
   }, [load])
 
   async function remove(id: string) {
-    if (!window.confirm('¿Eliminar este trabajo?')) return
+    if (!window.confirm('¿Eliminar este trabajo y su archivo PDF?')) return
     try {
       await trabajosApi.eliminar(id)
       await load()
     } catch {
       setError('No se pudo eliminar el trabajo')
-    }
-  }
-
-  async function changeSummaryStatus(row: Trabajo, status: Documento['estado']) {
-    if (!row.resumen_documento_id) {
-      setError('El participante todavía no ha subido el resumen del trabajo')
-      return
-    }
-    try {
-      await participantesApi.actualizarEstadoDocumento(
-        row.participante_id, 'resumen_trabajo', status, user?.id,
-      )
-      setRows(current => current.map(item =>
-        item.participante_id === row.participante_id
-          ? { ...item, estado_resumen: status }
-          : item,
-      ))
-      setError('')
-    } catch {
-      setError('No se pudo actualizar el estado del resumen')
-    }
-  }
-
-  async function changePaymentStatus(row: Trabajo, status: Pago['estado']) {
-    if (!row.comprobante_pago_id) {
-      setError('Este trabajo todavía no tiene un comprobante de pago')
-      return
-    }
-    try {
-      await participantesApi.actualizarEstadoPago(
-        row.participante_id, row.comprobante_pago_id, status, user?.id,
-      )
-      setRows(current => current.map(item =>
-        item.comprobante_pago_id === row.comprobante_pago_id
-          ? { ...item, estado_pago: status }
-          : item,
-      ))
-      setError('')
-    } catch {
-      setError('No se pudo actualizar el estado del pago')
     }
   }
 
@@ -99,14 +53,27 @@ export default function Trabajos({ participantId }: { participantId?: string }) 
           <h1>{participantId ? 'Mis trabajos' : 'Trabajos'}</h1>
           <p className="muted">
             {participantId
-              ? 'Ponencias asociadas a tu participación'
-              : 'Ponencias, resúmenes y pagos de cada participante'}
+              ? 'Descarga la plantilla, prepara tu artículo y envíalo en PDF.'
+              : 'Consulta las ponencias registradas; su dictamen se gestiona en Validación.'}
           </p>
         </div>
         <button className="btn-primary" onClick={() => navigate('/dashboard/trabajos/nuevo')}>
           <Plus size={17} /> Nuevo trabajo
         </button>
       </div>
+
+      {participantId && (
+        <article className="template-card">
+          <span className="template-icon"><FileText size={24} /></span>
+          <div>
+            <strong>Plantilla oficial para el trabajo</strong>
+            <p>Llénala respetando el formato y el límite de seis páginas. Después expórtala a PDF.</p>
+          </div>
+          <a className="btn-secondary" href={TEMPLATE_URL} download>
+            <Download size={16} /> Descargar plantilla Word
+          </a>
+        </article>
+      )}
 
       {error && <div className="alert error">{error}</div>}
 
@@ -135,10 +102,9 @@ export default function Trabajos({ participantId }: { participantId?: string }) 
               <th>Folio</th>
               <th>Título</th>
               <th>Autor</th>
-              <th>Eje temático</th>
-              {participantId
-                ? <><th>Modalidad</th><th>Estado</th></>
-                : <><th>Resumen</th><th>Pago</th></>}
+              <th>Modalidad</th>
+              <th>Estado</th>
+              <th>PDF</th>
               <th>Acciones</th>
             </tr>
           </thead>
@@ -150,59 +116,32 @@ export default function Trabajos({ participantId }: { participantId?: string }) 
                 <td>{row.folio}</td>
                 <td>{row.titulo}</td>
                 <td>{row.autor_principal}</td>
-                <td>{row.eje_tematico}</td>
-                {participantId ? (
-                  <>
-                    <td><span className="badge">{row.modalidad}</span></td>
-                    <td>
-                      <span className={`status-badge status-${row.estado}`}>
-                        {row.estado === 'en_revision' ? 'En revisión' : row.estado}
-                      </span>
-                    </td>
-                  </>
-                ) : (
-                  <>
-                    <td>
-                      <select
-                        className={`status-select status-${row.estado_resumen}`}
-                        value={row.estado_resumen}
-                        disabled={!row.resumen_documento_id}
-                        title={row.resumen_documento_id ? 'Estado del resumen' : 'Resumen no cargado'}
-                        onChange={event => void changeSummaryStatus(
-                          row, event.target.value as Documento['estado'],
-                        )}
-                      >
-                        {REVIEW_OPTIONS.map(option => (
-                          <option key={option.value} value={option.value}>{option.label}</option>
-                        ))}
-                      </select>
-                    </td>
-                    <td>
-                      <select
-                        className={`status-select status-${row.estado_pago}`}
-                        value={row.estado_pago}
-                        disabled={!row.comprobante_pago_id}
-                        title={row.comprobante_pago_id ? 'Estado del pago' : 'Pago no cargado'}
-                        onChange={event => void changePaymentStatus(
-                          row, event.target.value as Pago['estado'],
-                        )}
-                      >
-                        {REVIEW_OPTIONS.map(option => (
-                          <option key={option.value} value={option.value}>{option.label}</option>
-                        ))}
-                      </select>
-                    </td>
-                  </>
-                )}
+                <td><span className="badge">{row.modalidad}</span></td>
+                <td>
+                  <span className={`status-badge status-${row.estado}`}>
+                    {etiquetaEstadoTrabajo(row.estado)}
+                  </span>
+                </td>
+                <td>
+                  {row.ruta_archivo ? (
+                    <a className="file-link" href={`${API_BASE}${row.ruta_archivo}`}
+                      target="_blank" rel="noreferrer">
+                      <FileText size={15} /> Ver PDF
+                    </a>
+                  ) : <span className="muted">Sin archivo</span>}
+                </td>
                 <td>
                   <div className="actions">
-                    <button className="icon-button" title="Ver" onClick={() => navigate(`/dashboard/trabajos/${row.id}?mode=view`)}>
+                    <button className="icon-button" title="Ver"
+                      onClick={() => navigate(`/dashboard/trabajos/${row.id}?mode=view`)}>
                       <Eye size={15} />
                     </button>
-                    <button className="icon-button" title="Editar" onClick={() => navigate(`/dashboard/trabajos/${row.id}`)}>
+                    <button className="icon-button" title="Editar"
+                      onClick={() => navigate(`/dashboard/trabajos/${row.id}`)}>
                       <Pencil size={15} />
                     </button>
-                    <button className="icon-button danger" title="Eliminar" onClick={() => remove(row.id)}>
+                    <button className="icon-button danger" title="Eliminar"
+                      onClick={() => remove(row.id)}>
                       <Trash2 size={15} />
                     </button>
                   </div>

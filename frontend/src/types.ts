@@ -45,12 +45,13 @@ export interface Trabajo {
   palabras_clave?: string
   modalidad: 'presencial' | 'virtual' | 'grabado'
   estado: 'pendiente' | 'en_revision' | 'aceptado' | 'rechazado'
-  resumen_documento_id?: number
-  estado_resumen: Documento['estado']
-  comprobante_pago_id?: string
-  estado_pago: Pago['estado']
+  nombre_archivo?: string
+  ruta_archivo?: string
+  tamano_bytes?: number
   fecha_registro: string
 }
+
+export type ModalidadPago = 'individual' | 'agrupado'
 
 export interface DashboardStats {
   participantes: number
@@ -92,55 +93,4 @@ export interface NotificationItem {
   ruta: string
   leida: boolean
   fecha: string
-}
-
-export type EstadoValidacion =
-  | 'pendiente_academico'
-  | 'rechazado_academico'
-  | 'en_correccion_academico'
-  | 'aprobado_academico'
-  | 'pendiente_pago'
-  | 'pago_no_recibido'
-  | 'validado_completo'
-
-export interface ValidacionAcademica {
-  id: number
-  titulo: string
-  resumen: string
-  palabras_clave?: string
-  observaciones?: string
-  actualizado_en: string
-}
-
-export interface ValidacionPago {
-  id: number
-  nombre_archivo: string
-  ruta_archivo: string
-  monto?: number
-  estado: 'pendiente' | 'rechazado' | 'verificado'
-  fecha_carga: string
-}
-
-export interface HistorialValidacion {
-  id: number
-  estado_anterior?: EstadoValidacion
-  estado_nuevo: EstadoValidacion
-  comentario?: string
-  realizado_por: string
-  fecha: string
-}
-
-export interface Validacion {
-  id: number
-  participante_id: string
-  estado: EstadoValidacion
-  creado_en: string
-  actualizado_en: string
-  nombre: string
-  correo: string
-  institucion?: string
-  categoria?: string
-  academica?: ValidacionAcademica
-  pago?: ValidacionPago
-  historial?: HistorialValidacion[]
 }

@@ -2,7 +2,6 @@ import {
   CheckCircle2,
   Clock3,
   Eye,
-  FileCheck2,
   FileText,
   LockKeyhole,
   SearchCheck,
@@ -15,21 +14,19 @@ import {
 } from 'lucide-react'
 import axios from 'axios'
 import { useEffect, useState } from 'react'
-import { API_BASE, participantesApi, trabajosApi } from '../api'
+import { API_BASE, participantesApi, paymentConfigApi, trabajosApi } from '../api'
 import { useRouter } from '../router'
 import { useSession } from '../session/SessionContext'
-import type { Documento, Pago, Participante, Trabajo } from '../types'
+import type { Documento, ModalidadPago, Pago, Participante, Trabajo } from '../types'
 
-type OptionalDocument = 'carta_autorizacion' | 'trabajo_completo'
+type OptionalDocument = 'carta_autorizacion'
 
 interface DocumentConfiguration {
   carta_autorizacion: boolean
-  trabajo_completo: boolean
 }
 
 const EMPTY_CONFIGURATION: DocumentConfiguration = {
   carta_autorizacion: false,
-  trabajo_completo: false,
 }
 
 const DOCUMENT_TYPES: Array<{
@@ -38,18 +35,11 @@ const DOCUMENT_TYPES: Array<{
   icon: typeof FileText
   optionalKey?: OptionalDocument
 }> = [
-  { value: 'resumen_trabajo', label: 'Resumen del trabajo', icon: FileText },
   {
     value: 'carta_autorizacion',
     label: 'Carta de autorización',
     icon: ShieldCheck,
     optionalKey: 'carta_autorizacion',
-  },
-  {
-    value: 'trabajo_completo',
-    label: 'Trabajo completo',
-    icon: FileCheck2,
-    optionalKey: 'trabajo_completo',
   },
 ]
 
@@ -73,12 +63,25 @@ export default function Documentos({
   const [documents, setDocuments] = useState<Documento[]>([])
   const [payments, setPayments] = useState<Pago[]>([])
   const [works, setWorks] = useState<Trabajo[]>([])
-  const [paymentMode, setPaymentMode] = useState<'individual' | 'agrupado'>('individual')
+  const [paymentMode, setPaymentMode] = useState<ModalidadPago>('individual')
+  const [savingPaymentMode, setSavingPaymentMode] = useState(false)
   const [selectedWorkIds, setSelectedWorkIds] = useState<string[]>([])
   const [configuration, setConfiguration] =
     useState<DocumentConfiguration>(EMPTY_CONFIGURATION)
   const [error, setError] = useState('')
   const [uploading, setUploading] = useState('')
+
+  useEffect(() => {
+    const timer = window.setTimeout(async () => {
+      try {
+        const { data } = await paymentConfigApi.obtener()
+        setPaymentMode(data.modalidad)
+      } catch {
+        setError('No se pudo cargar la modalidad global de pagos')
+      }
+    }, 0)
+    return () => window.clearTimeout(timer)
+  }, [])
 
   useEffect(() => {
     if (participantLocked) return
@@ -115,7 +118,6 @@ export default function Documentos({
         setWorks(worksResponse.data.data)
         setConfiguration({
           carta_autorizacion: Boolean(configurationResponse.data.carta_autorizacion),
-          trabajo_completo: Boolean(configurationResponse.data.trabajo_completo),
         })
         setError('')
       } catch {
@@ -179,6 +181,7 @@ export default function Documentos({
     try {
       await participantesApi.guardarConfiguracionDocumentos(id, {
         ...next,
+        trabajo_completo: false,
         usuario_id: user?.id,
       })
       setConfiguration(next)
@@ -197,16 +200,28 @@ export default function Documentos({
     })
   }
 
-  function changePaymentMode(mode: 'individual' | 'agrupado') {
-    setPaymentMode(mode)
-    setSelectedWorkIds(current => mode === 'individual' ? current.slice(0, 1) : current)
+  async function changePaymentMode(mode: ModalidadPago) {
+    if (participantLocked || !user || mode === paymentMode) return
+    setSavingPaymentMode(true)
+    try {
+      await paymentConfigApi.actualizar(mode, user.id)
+      setPaymentMode(mode)
+      setSelectedWorkIds([])
+      setError('')
+    } catch (requestError: unknown) {
+      const message = axios.isAxiosError<{ error?: string }>(requestError)
+        ? requestError.response?.data?.error
+        : undefined
+      setError(message || 'No se pudo cambiar la modalidad global de pagos')
+    } finally {
+      setSavingPaymentMode(false)
+    }
   }
 
   async function uploadPayment(file?: File) {
-    if (!id || !file || selectedWorkIds.length === 0) return
+    if (!id || !file || (paymentMode === 'individual' && selectedWorkIds.length === 0)) return
     const body = new FormData()
     body.append('archivo', file)
-    body.append('modalidad', paymentMode)
     selectedWorkIds.forEach(workId => body.append('trabajo_ids', workId))
     if (user) body.append('usuario_id', user.id)
     setUploading('pago')
@@ -263,6 +278,9 @@ export default function Documentos({
   const documentsApproved = requiredTypes.every(type => documents.some(document =>
     document.tipo_documento === type.value && document.estado === 'validado',
   ))
+  const canUploadPayment = paymentMode === 'agrupado'
+    ? availableWorks.length > 0
+    : selectedWorkIds.length === 1
 
   return (
     <section>
@@ -278,6 +296,47 @@ export default function Documentos({
       </div>
 
       {error && <div className="alert error">{error}</div>}
+
+      {!participantLocked && (
+        <div className="form-card payment-global-config">
+          <div>
+            <span className="eyebrow">Configuración general</span>
+            <h2>Modalidad de comprobantes de pago</h2>
+            <p className="muted">
+              Esta elección se aplica a todos los participantes y no puede cambiarla el participante.
+            </p>
+          </div>
+          <div className="payment-mode" role="radiogroup" aria-label="Modalidad global de pago">
+            <label className={paymentMode === 'individual' ? 'active' : ''}>
+              <input
+                type="radio"
+                name="global-payment-mode"
+                checked={paymentMode === 'individual'}
+                disabled={savingPaymentMode}
+                onChange={() => void changePaymentMode('individual')}
+              />
+              <span>
+                <strong>Un pago por cada trabajo</strong>
+                <small>Cada comprobante se relaciona con un solo trabajo.</small>
+              </span>
+            </label>
+            <label className={paymentMode === 'agrupado' ? 'active' : ''}>
+              <input
+                type="radio"
+                name="global-payment-mode"
+                checked={paymentMode === 'agrupado'}
+                disabled={savingPaymentMode}
+                onChange={() => void changePaymentMode('agrupado')}
+              />
+              <span>
+                <strong>Un solo pago para todos</strong>
+                <small>El comprobante cubre automáticamente todos los trabajos del participante.</small>
+              </span>
+            </label>
+          </div>
+          {savingPaymentMode && <small className="muted">Guardando configuración...</small>}
+        </div>
+      )}
 
       {!participantLocked && (
         <div className="form-card">
@@ -487,7 +546,11 @@ export default function Documentos({
                       <strong>Comprobante de pago</strong>
                       <span className="step-label">Paso {requiredTypes.length + 1}</span>
                     </div>
-                    <small>Elige si el comprobante cubre uno o varios trabajos.</small>
+                    <small>
+                      {paymentMode === 'agrupado'
+                        ? 'La modalidad global aplica un solo comprobante a todos tus trabajos.'
+                        : 'La modalidad global requiere un comprobante por cada trabajo.'}
+                    </small>
                   </div>
                 </div>
 
@@ -499,7 +562,9 @@ export default function Documentos({
                         <div className="payment-item" key={payment.id}>
                           <div className="payment-summary">
                             <strong>
-                              {payment.modalidad === 'individual' ? 'Pago individual' : 'Pago agrupado'}
+                              {payment.modalidad === 'individual'
+                                ? 'Pago individual'
+                                : 'Pago único para todos'}
                             </strong>
                             <span className={`status-badge status-${payment.estado}`}>
                               {STATUS_LABELS[payment.estado]}
@@ -576,51 +641,35 @@ export default function Documentos({
                   </p>
                 ) : (
                   <div className="payment-form">
-                    <div className="payment-mode" role="radiogroup" aria-label="Modalidad de pago">
-                      <label className={paymentMode === 'individual' ? 'active' : ''}>
-                        <input
-                          type="radio"
-                          name="payment-mode"
-                          checked={paymentMode === 'individual'}
-                          onChange={() => changePaymentMode('individual')}
-                        />
+                    {paymentMode === 'individual' ? (
+                      <div className="payment-work-picker">
+                        {availableWorks.map(work => (
+                          <label
+                            key={work.id}
+                            className={selectedWorkIds.includes(work.id) ? 'selected' : ''}
+                          >
+                            <input
+                              type="radio"
+                              name="paid-work"
+                              checked={selectedWorkIds.includes(work.id)}
+                              onChange={() => toggleWork(work.id)}
+                            />
+                            <span><strong>{work.folio}</strong>{work.titulo}</span>
+                          </label>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="hierarchy-notice">
+                        <Receipt size={18} />
                         <span>
-                          <strong>Un pago por cada trabajo</strong>
-                          <small>Selecciona un trabajo y sube su comprobante.</small>
+                          El comprobante se asociará automáticamente con los {availableWorks.length}
+                          {availableWorks.length === 1 ? ' trabajo disponible.' : ' trabajos disponibles.'}
                         </span>
-                      </label>
-                      <label className={paymentMode === 'agrupado' ? 'active' : ''}>
-                        <input
-                          type="radio"
-                          name="payment-mode"
-                          checked={paymentMode === 'agrupado'}
-                          onChange={() => changePaymentMode('agrupado')}
-                        />
-                        <span>
-                          <strong>Un solo pago para varios</strong>
-                          <small>Selecciona todos los trabajos cubiertos.</small>
-                        </span>
-                      </label>
-                    </div>
-                    <div className="payment-work-picker">
-                      {availableWorks.map(work => (
-                        <label
-                          key={work.id}
-                          className={selectedWorkIds.includes(work.id) ? 'selected' : ''}
-                        >
-                          <input
-                            type={paymentMode === 'individual' ? 'radio' : 'checkbox'}
-                            name={paymentMode === 'individual' ? 'paid-work' : undefined}
-                            checked={selectedWorkIds.includes(work.id)}
-                            onChange={() => toggleWork(work.id)}
-                          />
-                          <span><strong>{work.folio}</strong>{work.titulo}</span>
-                        </label>
-                      ))}
-                    </div>
+                      </div>
+                    )}
                     <label
-                      className={`btn-primary payment-upload ${selectedWorkIds.length ? '' : 'disabled'}`}
-                      style={{ cursor: selectedWorkIds.length && !uploading ? 'pointer' : 'not-allowed' }}
+                      className={`btn-primary payment-upload ${canUploadPayment ? '' : 'disabled'}`}
+                      style={{ cursor: canUploadPayment && !uploading ? 'pointer' : 'not-allowed' }}
                     >
                       <Upload size={15} />
                       {uploading === 'pago' ? 'Subiendo...' : 'Elegir comprobante y subir'}
@@ -628,7 +677,7 @@ export default function Documentos({
                         hidden
                         type="file"
                         accept=".pdf,.jpg,.jpeg,.png"
-                        disabled={!selectedWorkIds.length || Boolean(uploading)}
+                        disabled={!canUploadPayment || Boolean(uploading)}
                         onChange={event => void uploadPayment(event.target.files?.[0])}
                       />
                     </label>

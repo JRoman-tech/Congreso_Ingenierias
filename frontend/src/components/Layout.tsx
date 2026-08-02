@@ -22,8 +22,8 @@ const adminNavigation = [
   { to: '/dashboard/academica', label: 'Información académica', icon: GraduationCap },
   { to: '/dashboard/documentos', label: 'Documentos', icon: FolderOpen },
   { to: '/dashboard/trabajos', label: 'Trabajos', icon: FileText },
+  { to: '/dashboard/validacion', label: 'Validación de trabajos', icon: ShieldCheck },
   { to: '/dashboard/historial', label: 'Historial', icon: History },
-  { to: '/dashboard/validacion', label: 'Validación', icon: ShieldCheck },
 ]
 
 const participantNavigation = [
@@ -31,7 +31,6 @@ const participantNavigation = [
   { to: '/dashboard/academica', label: 'Mi información académica', icon: GraduationCap },
   { to: '/dashboard/documentos', label: 'Mis documentos', icon: FolderOpen },
   { to: '/dashboard/trabajos', label: 'Mis trabajos', icon: FileText },
-  { to: '/dashboard/validacion', label: 'Mi validación', icon: ShieldCheck },
 ]
 
 export default function Layout({ children }: { children: ReactNode }) {
@@ -65,16 +64,12 @@ export default function Layout({ children }: { children: ReactNode }) {
           {navigation.map(({ to, label, icon: Icon }) => {
             const active = to === '/dashboard' ? path === to : path.startsWith(to)
             return (
-              <a
-                key={to}
-                href={to}
+              <a key={to} href={to} className={active ? 'nav-link active' : 'nav-link'}
                 onClick={event => {
                   event.preventDefault()
                   navigate(to)
                   setOpen(false)
-                }}
-                className={active ? 'nav-link active' : 'nav-link'}
-              >
+                }}>
                 <Icon size={19} />
                 <span>{label}</span>
               </a>
@@ -84,9 +79,7 @@ export default function Layout({ children }: { children: ReactNode }) {
 
         <div className="session-card">
           <div className="session-heading">
-            {user?.rol === 'administrador'
-              ? <ShieldCheck size={19} />
-              : <UserCircle size={19} />}
+            {user?.rol === 'administrador' ? <ShieldCheck size={19} /> : <UserCircle size={19} />}
             <span>Sesión iniciada</span>
           </div>
           <strong>{user?.nombre}</strong>
@@ -94,7 +87,6 @@ export default function Layout({ children }: { children: ReactNode }) {
           <span className="session-role">
             {user?.rol === 'administrador' ? 'Administrador' : 'Participante'}
           </span>
-
           <button className="logout-button" type="button" onClick={closeSession}>
             <LogOut size={15} /> Cerrar sesión
           </button>

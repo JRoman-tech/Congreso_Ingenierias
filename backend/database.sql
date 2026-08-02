@@ -87,6 +87,9 @@ CREATE TABLE IF NOT EXISTS trabajos (
   palabras_clave  VARCHAR(300) NULL,
   modalidad       ENUM('presencial','virtual','grabado') NOT NULL DEFAULT 'presencial',
   estado          ENUM('pendiente','en_revision','aceptado','rechazado') NOT NULL DEFAULT 'pendiente',
+  nombre_archivo  VARCHAR(255) NULL,
+  ruta_archivo    VARCHAR(500) NULL,
+  tamano_bytes    INT UNSIGNED NULL,
   fecha_registro  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   fecha_actualizacion DATETIME NULL ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
@@ -133,6 +136,16 @@ CREATE TABLE IF NOT EXISTS comprobantes_pago (
     FOREIGN KEY (participante_id) REFERENCES participantes (id)
     ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- La modalidad se elige una sola vez para todos los participantes.
+CREATE TABLE IF NOT EXISTS configuracion_pagos (
+  id                  TINYINT UNSIGNED NOT NULL,
+  modalidad           ENUM('individual','agrupado') NOT NULL DEFAULT 'individual',
+  fecha_actualizacion DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+INSERT IGNORE INTO configuracion_pagos (id, modalidad) VALUES (1, 'individual');
 
 CREATE TABLE IF NOT EXISTS comprobante_trabajos (
   comprobante_id CHAR(36) NOT NULL,

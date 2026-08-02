@@ -34,7 +34,6 @@ import mx.uacj.congreso.dto.EstadoRequest;
 @RequestMapping("/api/participantes/{participanteId}/pagos")
 public class PagosController {
 
-    private static final List<String> MODALIDADES = List.of("individual", "agrupado");
     private static final List<String> ESTADOS = List.of(
             "pendiente", "en_revision", "validado", "rechazado");
     private static final List<String> EXTENSIONES = List.of(".pdf", ".jpg", ".jpeg", ".png");
@@ -81,18 +80,25 @@ public class PagosController {
     public ResponseEntity<Map<String, Object>> subir(
             @PathVariable String participanteId,
             @RequestParam MultipartFile archivo,
-            @RequestParam String modalidad,
-            @RequestParam(name = "trabajo_ids") List<String> trabajoIds,
+            @RequestParam(name = "trabajo_ids", required = false) List<String> trabajoIds,
             @RequestParam(name = "usuario_id", required = false) String usuarioId) throws IOException {
 
         if (!participanteExiste(participanteId)) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(Map.of("error", "Participante no encontrado"));
         }
-        List<String> selectedIds = trabajoIds.stream()
+        String modalidad = modalidadConfigurada();
+        List<String> selectedIds = trabajoIds == null ? List.of() : trabajoIds.stream()
                 .map(String::trim).filter(value -> !value.isBlank()).distinct().toList();
-        if (!MODALIDADES.contains(modalidad)) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Modalidad de pago no válida"));
+        if ("agrupado".equals(modalidad)) {
+            selectedIds = jdbc.queryForList("""
+                    SELECT t.id FROM trabajos t
+                    WHERE t.participante_id = ?
+                      AND NOT EXISTS (
+                        SELECT 1 FROM comprobante_trabajos ct WHERE ct.trabajo_id = t.id
+                      )
+                    ORDER BY t.folio
+                    """, String.class, participanteId);
         }
         if (selectedIds.isEmpty()) {
             return ResponseEntity.badRequest().body(Map.of("error", "Selecciona al menos un trabajo"));
@@ -225,7 +231,6 @@ public class PagosController {
 
     private String primerDocumentoSinAprobar(String participanteId) {
         List<String> required = new ArrayList<>();
-        required.add("resumen_trabajo");
         List<Map<String, Object>> config = jdbc.queryForList("""
                 SELECT carta_autorizacion, trabajo_completo
                 FROM requisitos_documentos WHERE participante_id = ?
@@ -248,6 +253,11 @@ public class PagosController {
         Integer count = jdbc.queryForObject(
                 "SELECT COUNT(*) FROM participantes WHERE id = ?", Integer.class, participanteId);
         return count != null && count > 0;
+    }
+
+    private String modalidadConfigurada() {
+        return jdbc.queryForObject(
+                "SELECT modalidad FROM configuracion_pagos WHERE id = 1", String.class);
     }
 
     private String nombreParticipante(String participanteId) {

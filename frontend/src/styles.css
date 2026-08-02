@@ -842,6 +842,83 @@ textarea:focus {
   padding: 22px;
 }
 
+.template-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 16px;
+  align-items: center;
+  margin-bottom: 20px;
+  padding: 20px;
+  border: 1px solid #dcc27f;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #fffaf0, #fff);
+}
+
+.template-card p {
+  margin: 5px 0 0;
+  color: var(--muted);
+}
+
+.template-icon {
+  display: grid;
+  width: 46px;
+  height: 46px;
+  place-items: center;
+  border-radius: 11px;
+  color: var(--navy);
+  background: #f4cf72;
+}
+
+.file-link,
+.file-available {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--navy);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.file-link {
+  text-decoration: none;
+}
+
+.file-link:hover {
+  text-decoration: underline;
+}
+
+.work-file-card,
+.work-file-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.work-file-card {
+  justify-content: space-between;
+}
+
+.work-file-card h2,
+.work-file-card p {
+  margin: 0;
+}
+
+.work-file-card p {
+  margin-top: 5px;
+}
+
+.work-file-actions {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.file-picker {
+  max-width: 300px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .form-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1331,6 +1408,15 @@ textarea:focus {
   margin: 0;
 }
 
+.payment-global-config {
+  display: grid;
+  gap: 16px;
+}
+
+.payment-global-config h2 {
+  margin: 4px 0 6px;
+}
+
 .validation-stats {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -1692,9 +1778,19 @@ textarea:focus {
 
   .page-header,
   .document-row,
-  .document-actions {
+  .document-actions,
+  .template-card,
+  .work-file-card {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .template-card {
+    display: flex;
+  }
+
+  .work-file-actions {
+    justify-content: flex-start;
   }
 
   .document-actions {
