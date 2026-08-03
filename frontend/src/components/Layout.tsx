@@ -50,11 +50,16 @@ export default function Layout({ children }: { children: ReactNode }) {
 
   return (
     <div className="shell">
-      <button className="menu-button" type="button" onClick={() => setOpen(value => !value)}>
+      <button className="menu-button" type="button" aria-controls="main-sidebar"
+        aria-expanded={open} aria-label={open ? 'Cerrar menú' : 'Abrir menú'}
+        onClick={() => setOpen(value => !value)}>
         {open ? <X /> : <Menu />}
       </button>
 
-      <aside className={`sidebar ${open ? 'open' : ''}`}>
+      {open && <button className="sidebar-backdrop" type="button" aria-label="Cerrar menú"
+        onClick={() => setOpen(false)} />}
+
+      <aside id="main-sidebar" className={`sidebar ${open ? 'open' : ''}`}>
         <div className="brand">
           <span className="brand-number">2</span>
           <div>
