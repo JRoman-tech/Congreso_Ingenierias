@@ -248,7 +248,10 @@ Mejora recomendada:
 - Agregar expiración, revocación y protección contra fuerza bruta.
 - Incorporar recuperación de contraseña por correo mediante tokens de un solo uso.
 
-Otra consideración: `AdminInitializer` toma la credencial administrativa desde variables de entorno al arrancar. En la implementación actual puede volver a establecer ese hash durante un reinicio. Para que el administrador conserve siempre un cambio hecho desde la interfaz, conviene modificarlo para que solo cree al administrador si no existe o incorporar una bandera explícita de restablecimiento.
+El administrador inicial se crea únicamente cuando todavía no existe y exige
+`ADMIN_PASSWORD` como variable de entorno. Los reinicios posteriores no
+reescriben su hash, por lo que un cambio hecho desde la interfaz se conserva. El
+repositorio tampoco incluye una contraseña administrativa predeterminada.
 
 Una respuesta madura en entrevista sería:
 
@@ -297,7 +300,7 @@ Grupos principales de endpoints:
 - `/api/health`: salud del backend.
 - `/api/auth`: registro e inicio de sesión.
 - `/api/auth/password`: cambio propio y restablecimiento administrativo.
-- `/api/sesion`: recuperación de usuario y opciones.
+- `/api/sesion/{usuarioId}`: recuperación del usuario autenticado.
 - `/api/participantes`: CRUD de participantes.
 - `/api/participantes/{id}/academica`: información académica.
 - `/api/participantes/{id}/documentos`: archivos y requisitos.
@@ -778,4 +781,3 @@ Preferir:
 - Preparar una historia STAR sobre el límite de Railway.
 - No compartir secretos durante la entrevista o una grabación.
 - Tener abiertas las dos URLs y probarlas antes de comenzar.
-

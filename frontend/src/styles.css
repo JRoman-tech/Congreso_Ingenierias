@@ -442,27 +442,6 @@ button {
   font-weight: 800;
 }
 
-.test-switcher {
-  margin-top: 5px;
-  padding-top: 10px;
-  border-top: 1px solid #ffffff1c;
-}
-
-.test-switcher label {
-  display: block;
-  margin-bottom: 5px;
-  color: #b9c6d8;
-  font-size: 10px;
-}
-
-.test-switcher select {
-  padding: 7px 8px;
-  border-color: #ffffff2b;
-  color: white;
-  background: #213c60;
-  font-size: 11px;
-}
-
 .session-loading {
   display: grid;
   min-height: 100vh;

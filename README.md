@@ -19,7 +19,6 @@ Proyecto único para administrar participantes y su proceso de validación.
 Desde esta carpeta ejecuta:
 
 ```powershell
-npm install
 npm run setup
 & "C:\Program Files\MySQL\MySQL Server 8.0\bin\mysql.exe" -h 127.0.0.1 -P 3307 -u root -p --default-character-set=utf8mb4 -e "source backend/database.sql"
 ```
@@ -37,13 +36,20 @@ arrancar, sin borrar la información existente.
 Escribe tu contraseña de MySQL cuando se solicite y abre
 <http://localhost:5173>. La API se ejecuta en <http://localhost:3001>.
 
-Acceso inicial del administrador:
+Antes del primer arranque define una contraseña administrativa propia; no existe
+una contraseña predeterminada en el código:
 
-- Correo: `admin@cifi.mx`
-- Contraseña: `admin123`
+```powershell
+$env:ADMIN_PASSWORD = Read-Host "Contraseña inicial del administrador"
+```
 
-También puedes configurar `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD` y
-`DB_NAME` manualmente y después ejecutar `npm run dev`.
+El correo inicial es `admin@cifi.mx` y puede cambiarse mediante
+`ADMIN_EMAIL`. La contraseña de entorno solo crea al administrador cuando aún
+no existe, por lo que los cambios posteriores de contraseña se conservan.
+
+También puedes configurar `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`,
+`DB_NAME`, `ADMIN_EMAIL` y `ADMIN_PASSWORD` manualmente y después ejecutar
+`npm run dev`.
 
 ## Verificación
 

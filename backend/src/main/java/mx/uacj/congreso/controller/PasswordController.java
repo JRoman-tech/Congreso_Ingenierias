@@ -47,7 +47,7 @@ public class PasswordController {
             case SIN_PERMISO -> ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(Map.of("error", "Solo un administrador puede realizar esta acción"));
             default -> ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("error", "El participante no tiene un usuario activo"));
+                    .body(Map.of("error", "Participante no encontrado"));
         };
     }
 }

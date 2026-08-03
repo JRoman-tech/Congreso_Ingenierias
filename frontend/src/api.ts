@@ -22,7 +22,6 @@ export const activityApi = {
 }
 
 export const sessionApi = {
-  opciones: () => api.get('/sesion/opciones'),
   obtener: (id: string) => api.get(`/sesion/${id}`),
 }
 

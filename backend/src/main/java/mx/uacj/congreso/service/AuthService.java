@@ -27,7 +27,6 @@ public class AuthService {
 
     @Transactional
     public Optional<SesionUsuarioResponse> login(LoginRequest request) {
-        sesionService.listarOpciones();
         List<java.util.Map<String, Object>> credentials = jdbc.queryForList("""
                 SELECT u.id, u.password_hash
                 FROM usuarios u
@@ -68,7 +67,7 @@ public class AuthService {
                   (id, participante_id, nombre, correo, rol, password_hash, activo)
                 VALUES (?, ?, ?, ?, 'participante', ?, TRUE)
                 """, userId, participantId, fullName,
-                "sesion." + participantId.replace("-", "") + "@example.test",
+                request.correo().trim(),
                 passwordEncoder.encode(request.password()));
         jdbc.update("INSERT INTO validaciones (participante_id) VALUES (?)", participantId);
         return sesionService.obtener(userId).orElseThrow();

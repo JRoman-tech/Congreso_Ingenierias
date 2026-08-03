@@ -1,6 +1,8 @@
 package mx.uacj.congreso.service;
 
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -43,6 +45,25 @@ public class PasswordService {
                 UPDATE usuarios SET password_hash = ?
                 WHERE participante_id = ? AND rol = 'participante' AND activo = TRUE
                 """, encoder.encode(passwordNuevo), participanteId.trim());
-        return actualizados == 0 ? Resultado.USUARIO_NO_ENCONTRADO : Resultado.ACTUALIZADA;
+        if (actualizados > 0) return Resultado.ACTUALIZADA;
+
+        List<Map<String, Object>> participantes = jdbc.queryForList("""
+                SELECT TRIM(CONCAT_WS(' ', nombre, apellido_paterno, apellido_materno)) nombre,
+                       correo
+                FROM participantes
+                WHERE id = ?
+                LIMIT 1
+                """, participanteId.trim());
+        if (participantes.isEmpty()) return Resultado.USUARIO_NO_ENCONTRADO;
+
+        Map<String, Object> participante = participantes.get(0);
+        jdbc.update("""
+                INSERT INTO usuarios
+                  (id, participante_id, nombre, correo, rol, password_hash, activo)
+                VALUES (?, ?, ?, ?, 'participante', ?, TRUE)
+                """, UUID.randomUUID().toString(), participanteId.trim(),
+                participante.get("nombre").toString(), participante.get("correo").toString(),
+                encoder.encode(passwordNuevo));
+        return Resultado.ACTUALIZADA;
     }
 }

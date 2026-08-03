@@ -36,13 +36,6 @@ CREATE TABLE IF NOT EXISTS usuarios (
     ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-INSERT IGNORE INTO usuarios
-  (id, participante_id, nombre, correo, rol, password_hash, activo)
-VALUES
-  ('90000000-0000-0000-0000-000000000001', NULL,
-   'Administrador del congreso', 'admin@cifi.mx', 'administrador',
-   '$2a$10$ak/H5V2GBACIO7a/ETN/t.ON8WhxDSrdTc9UyE6VsSSQ8HGIVnGWe', TRUE);
-
 CREATE TABLE IF NOT EXISTS informacion_academica (
   id                    INT UNSIGNED NOT NULL AUTO_INCREMENT,
   participante_id       CHAR(36)     NOT NULL,

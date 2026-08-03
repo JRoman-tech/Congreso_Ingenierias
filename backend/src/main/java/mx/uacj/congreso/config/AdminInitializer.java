@@ -21,7 +21,7 @@ public class AdminInitializer implements ApplicationRunner {
     public AdminInitializer(
             JdbcTemplate jdbc,
             @Value("${ADMIN_EMAIL:admin@cifi.mx}") String email,
-            @Value("${ADMIN_PASSWORD:admin123}") String password) {
+            @Value("${ADMIN_PASSWORD:}") String password) {
         this.jdbc = jdbc;
         this.email = email.trim();
         this.password = password;
@@ -31,18 +31,21 @@ public class AdminInitializer implements ApplicationRunner {
     public void run(ApplicationArguments args) {
         List<String> administrators = jdbc.queryForList(
                 "SELECT id FROM usuarios WHERE rol = 'administrador' LIMIT 1", String.class);
-        String hash = encoder.encode(password);
         if (administrators.isEmpty()) {
+            if (password.isBlank()) {
+                throw new IllegalStateException(
+                        "ADMIN_PASSWORD es obligatorio para crear el administrador inicial");
+            }
             jdbc.update("""
                     INSERT INTO usuarios
                       (id, participante_id, nombre, correo, rol, password_hash, activo)
                     VALUES (?, NULL, 'Administrador del congreso', ?, 'administrador', ?, TRUE)
-                    """, UUID.randomUUID().toString(), email, hash);
+                    """, UUID.randomUUID().toString(), email, encoder.encode(password));
         } else {
             jdbc.update("""
-                    UPDATE usuarios SET correo = ?, password_hash = ?, activo = TRUE
+                    UPDATE usuarios SET correo = ?, activo = TRUE
                     WHERE id = ?
-                    """, email, hash, administrators.get(0));
+                    """, email, administrators.get(0));
         }
     }
 }
